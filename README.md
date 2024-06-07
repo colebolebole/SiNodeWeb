@@ -1,4 +1,4 @@
-# SiPyWeb-Rewritten | SiPyWeb but with a new fresh look & experience
+SiNodeWeb| SiPyWeb but with a new fresh look & experience
 ---
 Prerequisites
 
