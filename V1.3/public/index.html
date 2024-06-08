@@ -58,8 +58,12 @@
             return files;
         }
 
+        function viewFile(path) {
+            window.open(`/preview?path=${path}`, '_blank');
+        }
+
         function copyFileLink(path) {
-            const fileURL = window.location.origin + `/file?path=${path}`;
+            const fileURL = window.location.origin + `/download?path=${encodeURIComponent(path)}`;
             navigator.clipboard.writeText(fileURL)
                 .then(() => {
                     alert('File link copied to clipboard!');
@@ -95,8 +99,9 @@
                     const previewButton = document.createElement('a');
                     previewButton.className = 'button';
                     previewButton.textContent = 'Preview';
-                    previewButton.href = `/preview?path=${file.path}`;
-                    previewButton.target = '_blank';
+                    previewButton.onclick = () => {
+                        viewFile(file.path);
+                    };
 
                     const downloadButton = document.createElement('a');
                     downloadButton.className = 'button';
