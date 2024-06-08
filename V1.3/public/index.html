@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiNodeWeb</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .file, .directory {
+            margin: 5px 0;
+        }
+        .directory {
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .file {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .button {
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #000;
+        }
+        .button:hover {
+            background-color: #f0f0f0;
+        }
+        .copy-link-button {
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #000;
+        }
+        .copy-link-button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>SiNodeWeb</h1>
+    <div id="file-list"></div>
+    <script>
+        async function fetchFiles(path = '') {
+            const response = await fetch(`/files?path=${path}`);
+            const files = await response.json();
+            return files;
+        }
+
+        function copyFileLink(path) {
+            const fileURL = window.location.origin + `/file?path=${path}`;
+            navigator.clipboard.writeText(fileURL)
+                .then(() => {
+                    alert('File link copied to clipboard!');
+                })
+                .catch((error) => {
+                    console.error('Error copying file link: ', error);
+                });
+        }
+
+        function renderFiles(files) {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+
+            files.forEach(file => {
+                const fileElement = document.createElement('div');
+                fileElement.className = file.isDirectory ? 'directory' : 'file';
+
+                const fileName = document.createElement('span');
+                fileName.textContent = file.name;
+
+                if (file.isDirectory) {
+                    fileElement.onclick = () => {
+                        fetchFiles(file.path).then(renderFiles);
+                    };
+                }
+
+                fileElement.appendChild(fileName);
+
+                if (!file.isDirectory) {
+                    const buttons = document.createElement('div');
+                    buttons.className = 'buttons';
+
+                    const previewButton = document.createElement('a');
+                    previewButton.className = 'button';
+                    previewButton.textContent = 'Preview';
+                    previewButton.href = `/preview?path=${file.path}`;
+                    previewButton.target = '_blank';
+
+                    const downloadButton = document.createElement('a');
+                    downloadButton.className = 'button';
+                    downloadButton.textContent = 'Download';
+                    downloadButton.href = `/download?path=${file.path}`;
+
+                    const copyLinkButton = document.createElement('div');
+                    copyLinkButton.className = 'copy-link-button';
+                    copyLinkButton.textContent = 'Copy Link';
+                    copyLinkButton.onclick = () => {
+                        copyFileLink(file.path);
+                    };
+
+                    buttons.appendChild(previewButton);
+                    buttons.appendChild(downloadButton);
+                    buttons.appendChild(copyLinkButton);
+                    fileElement.appendChild(buttons);
+                }
+
+                fileList.appendChild(fileElement);
+            });
+        }
+
+        fetchFiles().then(renderFiles);
+    </script>
+</body>
+</html>

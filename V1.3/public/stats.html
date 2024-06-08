@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiPyWeb-Rewritten | Stats Center</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stats Center</h1>
+    <div>
+        <p>Total Bandwidth Used: <span id="bandwidth-bytes"></span> bytes (<span id="bandwidth-mb"></span> MB, <span id="bandwidth-gb"></span> GB)</p>
+        <p>Active Downloads: <span id="active-downloads"></span></p>
+        <h2>CPU Usage</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Speed (MHz)</th>
+                    <th>Usage (%)</th>
+                </tr>
+            </thead>
+            <tbody id="cpu-usage">
+            </tbody>
+        </table>
+    </div>
+    <script>
+        async function fetchStats() {
+            const response = await fetch('/stats');
+            const stats = await response.json();
+            document.getElementById('bandwidth-bytes').textContent = stats.totalBytesSent;
+            document.getElementById('bandwidth-mb').textContent = stats.totalMB;
+            document.getElementById('bandwidth-gb').textContent = stats.totalGB;
+            document.getElementById('active-downloads').textContent = stats.activeDownloads;
+
+            const cpuUsageTable = document.getElementById('cpu-usage');
+            cpuUsageTable.innerHTML = '';
+
+            stats.cpuUsage.forEach(cpu => {
+                const row = document.createElement('tr');
+                const modelCell = document.createElement('td');
+                const speedCell = document.createElement('td');
+                const usageCell = document.createElement('td');
+
+                modelCell.textContent = cpu.model;
+                speedCell.textContent = cpu.speed;
+                usageCell.textContent = cpu.usage;
+
+                row.appendChild(modelCell);
+                row.appendChild(speedCell);
+                row.appendChild(usageCell);
+                cpuUsageTable.appendChild(row);
+            });
+        }
+
+        fetchStats();
+        setInterval(fetchStats, 5000); // Refresh stats every 5 seconds
+    </script>
+</body>
+</html>
