@@ -1,5 +1,3 @@
-SiNodeWeb
-
 SiNodeWeb is a free and open source webserver that features sharex support & more!
 
 ---
