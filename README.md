@@ -6,7 +6,7 @@ node.js
 
 ---
 # Installation Instructions
-```npm install express```
+```npm install express body-parser multer```
 
 ```node index```
 
