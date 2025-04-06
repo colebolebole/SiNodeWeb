@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiPyWeb-Rewritten | Stats Center</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #6e44ff 0%, #29c2ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 3rem;
+            font-weight: 700;
+            font-size: 2.5rem;
+            padding-top: 1rem;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            border-radius: 14px;
+            padding: 2rem;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-title {
+            color: #888;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1.2px;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0.75rem 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat-details {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .data-table {
+            background: #1a1a1a;
+            border-radius: 14px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .data-table thead {
+            background: #2a2a2a;
+        }
+
+        .data-table th {
+            color: #999;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding: 1.5rem;
+        }
+
+        .data-table td {
+            border-bottom: 1px solid #2a2a2a;
+            color: #e0e0e0;
+            padding: 1.2rem 1.5rem;
+        }
+
+        .usage-bar {
+            height: 10px;
+            background: #333;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .usage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6e44ff, #29c2ff);
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 800px) {
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 2rem;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .stats-container {
+                gap: 1.5rem;
+            }
+            
+            .stat-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Stats Center</h1>
+    
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-title">Bandwidth Usage</div>
+            <div class="stat-value" id="bandwidth-bytes">0 bytes</div>
+            <div class="stat-details">
+                <div><span id="bandwidth-mb">0</span> MB</div>
+                <div><span id="bandwidth-gb">0</span> GB</div>
+            </div>
+            <div class="usage-bar">
+                <div class="usage-fill" id="bandwidth-bar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Active Downloads</div>
+            <div class="stat-value" id="active-downloads">0</div>
+        </div>
+    </div>
+
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Speed (MHz)</th>
+                    <th>Usage (%)</th>
+                </tr>
+            </thead>
+            <tbody id="cpu-usage">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchStats() {
+            const response = await fetch('/stats');
+            const stats = await response.json();
+            
+            document.getElementById('bandwidth-bytes').textContent = `${stats.totalBytesSent.toLocaleString()} bytes`;
+            document.getElementById('bandwidth-mb').textContent = stats.totalMB.toLocaleString();
+            document.getElementById('bandwidth-gb').textContent = stats.totalGB.toLocaleString();
+            document.getElementById('active-downloads').textContent = stats.activeDownloads.toLocaleString();
+            
+            const bandwidthPercentage = (stats.totalBytesSent / 1000000000000) * 100;
+            document.getElementById('bandwidth-bar').style.width = `${Math.min(bandwidthPercentage, 100)}%`;
+
+            const cpuUsageTable = document.getElementById('cpu-usage');
+            cpuUsageTable.innerHTML = stats.cpuUsage.map(cpu => `
+                <tr>
+                    <td>${cpu.model}</td>
+                    <td>${cpu.speed.toLocaleString()}</td>
+                    <td>${cpu.usage}%</td>
+                </tr>
+            `).join('');
+        }
+
+        fetchStats();
+        setInterval(fetchStats, 5000);
+    </script>
+</body>
+</html>
