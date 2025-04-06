@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiNodeWeb</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #6e44ff 0%, #29c2ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 3rem;
+            font-weight: 700;
+            font-size: 2.5rem;
+            padding-top: 1rem;
+        }
+
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .file-item {
+            background: #1a1a1a;
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column; /* Stack content vertically */
+            align-items: stretch; /* Stretch content to fill width */
+            cursor: pointer;
+            gap: 0.5rem; /* Add spacing between elements */
+        }
+
+        .file-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .directory-item {
+            font-weight: 600;
+            color: #29c2ff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .directory-item .material-icons {
+            font-size: 1.2rem;
+        }
+
+        .file-name {
+            font-size: 1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap; /* Allow buttons to wrap */
+            justify-content: flex-start; /* Align buttons to the start */
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #6e44ff 0%, #29c2ff 100%);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0; /* Prevent buttons from shrinking */
+        }
+
+        .action-button:hover {
+            opacity: 0.9;
+        }
+
+        .action-button.secondary {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e0e0e0;
+        }
+
+        .action-button.secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .material-icons {
+            font-size: 1rem;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 800px) {
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 2rem;
+            }
+            
+            .file-item {
+                padding: 1rem;
+            }
+
+            .file-name {
+                font-size: 0.9rem;
+            }
+
+            .action-button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>SiNodeWeb</h1>
+    <div class="file-list" id="file-list"></div>
+    <script>
+        async function fetchFiles(path = '') {
+            const response = await fetch(`/files?path=${path}`);
+            const files = await response.json();
+            return files;
+        }
+
+        function viewFile(path) {
+            window.open(`/preview?path=${path}`, '_blank');
+        }
+
+        function copyFileLink(path) {
+            const fileURL = window.location.origin + `/download?path=${encodeURIComponent(path)}`;
+            navigator.clipboard.writeText(fileURL)
+                .then(() => {
+                    alert('File link copied to clipboard!');
+                })
+                .catch((error) => {
+                    console.error('Error copying file link: ', error);
+                });
+        }
+
+        function renderFiles(files) {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+
+            files.forEach(file => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'file-item';
+
+                if (file.isDirectory) {
+                    fileElement.innerHTML = `
+                        <div class="directory-item" onclick="fetchFiles('${file.path}').then(renderFiles)">
+                            <span class="material-icons">folder_open</span>
+                            ${file.name}
+                        </div>
+                    `;
+                } else {
+                    fileElement.innerHTML = `
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-actions">
+                            <button class="action-button" onclick="viewFile('${file.path}')">
+                                <span class="material-icons">visibility</span> Preview
+                            </button>
+                            <a class="action-button secondary" href="/download?path=${file.path}" download>
+                                <span class="material-icons">download</span> Download
+                            </a>
+                            <button class="action-button secondary" onclick="copyFileLink('${file.path}')">
+                                <span class="material-icons">link</span> Copy Link
+                            </button>
+                        </div>
+                    `;
+                }
+
+                fileList.appendChild(fileElement);
+            });
+        }
+
+        fetchFiles().then(renderFiles);
+    </script>
+</body>
+</html>
