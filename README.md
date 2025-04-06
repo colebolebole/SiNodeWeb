@@ -9,5 +9,5 @@ node.js
 # Installation Instructions
 ```npm install express body-parser multer```
 
-```node index```
+```node server.js```
 
